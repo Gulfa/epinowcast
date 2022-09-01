@@ -79,6 +79,19 @@ data {
   matrix[rep_fncol, rep_rncol + 1] rep_rdesign; 
  array[2, 1] real rep_beta_sd_p;
 
+
+  // Forecasting input
+  int n_forecast;
+
+  int forecast_fncol;
+  int forecast_rncol;
+  int new_beta_index[forecast_fncol];	
+  int forecast_fnindex;
+  
+  matrix[forecast_fnindex, forecast_fncol + 1] forecast_fdesign;
+  matrix[forecast_fncol,  forecast_rncol + 1] forecast_rdesign;
+
+
   // Missing reference date model
   int model_miss;
   int miss_obs;
@@ -106,6 +119,8 @@ data {
   int pp; // should posterior predictions be produced
   int cast; // should a nowcast be produced
   int ologlik; // Should the pointwise log likelihood be calculated
+
+ 
 }
 
 transformed data{
@@ -282,7 +297,7 @@ model {
         ref_as_p, phi, model_obs
       );
     }
-    }
+   }
   }
 }
 
@@ -291,6 +306,36 @@ generated quantities {
   array[pp ? miss_obs : 0] int pp_miss_ref;
   vector[ologlik ? s : 0] log_lik;
   array[cast ? dmax : 0, cast ? g : 0] int pp_inf_obs;
+
+  // Forecast
+
+  array[g] vector[n_forecast + expr_gt_n]  forecast;
+  vector[n_forecast] forecast_r;
+  vector[forecast_fncol] forecast_beta;
+  for(i in 1:(forecast_fncol)){
+  	if(new_beta_index[i] == 1){
+	      forecast_beta[i]= normal_rng(0,1);
+        }else{
+	      forecast_beta[i]= expr_beta[i - sum(new_beta_index[1:i])];
+	}
+  }	
+  forecast_r = combine_effects(
+    expr_r_int, forecast_beta, forecast_fdesign, expr_beta_sd, forecast_rdesign, 1
+  );
+
+  array[g] int forecast_g = rep_array(0, g);
+  
+  matrix[expr_gt_n, g] initial_values_forecast;
+  for(i in 1:expr_gt_n){
+    for(j in 1:g){
+      initial_values_forecast[i,j]= exp_lobs[j][t-expr_gt_n + i];
+    }
+  }	
+  forecast = log_expected_obs_from_r(
+    initial_values_forecast, forecast_r, forecast_g, n_forecast, expr_gt_n, expr_gt_n, expr_lrgt, n_forecast + expr_gt_n, g
+  );
+
+
   profile("generated_total") {
   if (cast) {
     vector[csdmax[s]] log_exp_obs;

@@ -330,6 +330,75 @@ enw_expectation <- function(formula = ~ rw(day, by = .group),
   return(out)
 }
 
+
+#' Forcasting model module
+#'
+#' @param N_days Number of days to forecast
+#' 
+#' @param trend_estimation_method Which trend to use for forecasting. A value of N uses an average over the last N days of trend estimates, while a value of "dynamic" propagates the trend using the specified expectation model, for example continuing the random walk.
+#' 
+#' @inherit enw_report return
+#' @inheritParams enw_obs
+#' @family modelmodules
+#' @export
+#' @examples
+#' enw_forcast(N_days=14)
+enw_forecast <- function(formula = ~ rw(day, by = .group), N_days=0, continue_dynamics=FALSE, data=data) {
+  if (as_string_formula(formula) %in% "~0") {
+    stop("An expectation model formula must be specified")
+  }
+
+  obs <- data$obs[[1]]
+  extended_obs <- rbind(data$obs[[1]], data.table(reference_date=seq(data$max_date + 1,
+                                                                     data$max_date + N_days , by=1), .group=1,forecast=TRUE), fill=TRUE)
+  metareference <- enw_metadata(
+    extended_obs[!is.na(reference_date)],
+    target_date = "reference_date"
+  )
+  all_features <- enw_add_metaobs_features(metareference, holidays = data$holidays)
+
+  #[(nrow(metareference) - N_days): nrow(metareference)]
+
+  
+  form_in_data <- enw_formula(formula, all_features[is.na(forecast)], sparse = FALSE)
+  form_forecast <- enw_formula(formula, all_features, sparse = FALSE)
+  in_data <- enw_formula_as_data_list(
+    form_in_data,
+    prefix = "in_data", drop_intercept = TRUE
+  )
+  forecast_data <- enw_formula_as_data_list(
+    form_forecast,
+    prefix = "forecast", drop_intercept = TRUE
+  )
+
+  new_columns <- colnames(forecast_data$forecast_fdesign)[!colnames(forecast_data$forecast_fdesign) %in% colnames(in_data$in_data_fdesign)]
+  new_beta_index <- colnames(forecast_data$forecast_fdesign) %in% new_columns
+
+
+  forecast_mask <- (forecast_data$forecast_fnrow - N_days +1):forecast_data$forecast_fnrow
+  
+  forecast_data$forecast_fnrow <- N_days
+  forecast_data$forecast_fnindex <- N_days
+  forecast_data$forecast_findex <- 1:N_days
+  forecast_data$forecast_fdesign <- forecast_data$forecast_fdesign[forecast_mask, ]
+  if(continue_dynamics==FALSE){
+    forecast_data$forecast_fdesign[,new_columns] <- 0
+  }
+  
+  out <- list()
+  out$formula$forecast <- form_forecast$formula
+
+  out$data <- c(forecast_data,
+                list(n_forecast=N_days,
+                     new_beta_index=new_beta_index[2:length(new_beta_index)])
+                
+                )
+  out$inits <- function(data, priors) {
+    return(function()return(list()))
+  }
+  return(out)
+}
+
 #' Missing reference data model module
 #'
 #' @param formula A formula (as implemented in [enw_formula()]) describing

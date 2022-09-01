@@ -17,6 +17,9 @@
 #' [enw_expectation()]. By default this is set to be highly flexible and thus
 #' weakly informed.
 #'
+#' @param forecast Specification of the forecasting model as defined using
+#' [enw_forecast()]. By default no forecast is performed.
+#'
 #' @param missing The missing reference date model specification as defined
 #' using [enw_missing()]. By default this is set to not be used.
 #'
@@ -114,11 +117,13 @@ epinowcast <- function(data,
                          formula = ~ rw(day, .group),
                          generation_time = 1,
                          data = data
-                       ),
+                         ),
+                       forecast = epinowcast::enw_forecast(N_days=0),
                        missing = epinowcast::enw_missing(
                          formula = ~0,
                          data = data
-                       ),
+                         ),
+                       
                        obs = epinowcast::enw_obs(
                          family = "negbin", data = data
                        ),
@@ -132,7 +137,7 @@ epinowcast <- function(data,
                        priors,
                        ...) {
   modules <- list(
-    expectation, reference, report, missing, obs, fit, ...
+    expectation, reference, report, forecast, missing, obs, fit, ...
   )
   names(modules) <- as.character(seq_len(length(modules)))
   purrr::walk(modules, check_module)

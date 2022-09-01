@@ -635,7 +635,7 @@ enw_delay_metadata <- function(max_delay = 20, breaks = 4) {
 #' )
 enw_construct_data <- function(obs, new_confirm, latest, missing_reference,
                                reporting_triangle, metareport, metareference,
-                               metadelay, by, max_delay) {
+                               metadelay, by, max_delay,holidays) {
   out <- data.table::data.table(
     obs = list(obs),
     new_confirm = list(new_confirm),
@@ -650,7 +650,8 @@ enw_construct_data <- function(obs, new_confirm, latest, missing_reference,
     by = list(by),
     groups = length(unique(obs$.group)),
     max_delay = max_delay,
-    max_date = max(obs$report_date)
+    max_date = max(obs$report_date),
+    holidays = holidays
   )
   class(out) <- c("enw_preprocess_data", class(out))
   return(out[])
@@ -805,8 +806,9 @@ enw_preprocess_data <- function(obs, by = c(), max_delay = 20, holidays = c(),
     metareport = metareport,
     metadelay = metadelay,
     by = by,
-    max_delay = max_delay
-  )
+    max_delay = max_delay,
+    holidays = holidays    
 
+  )
   return(out[])
 }

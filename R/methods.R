@@ -74,3 +74,5 @@ plot.epinowcast <- function(x, latest_obs = NULL, type = "nowcast",
   }
   return(plot)
 }
+
+
