@@ -90,6 +90,37 @@ enw_nowcast_summary <- function(fit, obs,
   return(nowcast[])
 }
 
+
+#' @title FUNCTION_TITLE
+#' @description FUNCTION_DESCRIPTION
+#' @param fit PARAM_DESCRIPTION
+#' @param obs PARAM_DESCRIPTION
+#' @param probs PARAM_DESCRIPTION, Default: c(0.05, 0.2, 0.35, 0.5, 0.65, 0.8,
+#' 0.95)
+#' @return OUTPUT_DESCRIPTION
+#' @family postprocess
+#' @export
+#' @importFrom data.table as.data.table copy setorderv
+enw_forecast_summary <- function(fit, obs,
+                                probs = c(
+                                  0.05, 0.2, 0.35, 0.5, 0.65, 0.8,
+                                  0.95
+                                )) {
+  forecast <- enw_posterior(
+    fit,
+    variables = "forecast",
+    probs = probs
+  )
+  forecast_dates <- seq(nowcast$max_date  - nrow(forecast) + nowcast$data[[1]]$n_forecast +1, nowcast$max_date + nowcast$data[[1]]$n_forecast, by=1)
+  forecast$reference_date <- forecast_dates
+  forecast <- forecast[reference_date > nowcast$max_date]
+#  data.table::setorderv(forecast, c(".group", "reference_date"))
+  forecast[, variable := NULL]
+  return(forecast[])
+}
+
+
+
 #' @title FUNCTION_TITLE
 #'
 #' @description FUNCTION_DESCRIPTION

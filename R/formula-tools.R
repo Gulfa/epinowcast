@@ -306,7 +306,7 @@ construct_rw <- function(rw, data) {
     data,
     feature = rw$time
   )
-  ctime <- paste0("c", rw$time)
+  ctime <- rw$time#paste0("c", rw$time)
   terms <- grep(ctime, colnames(data), value = TRUE)
   fdata <- data.table::copy(data)
   fdata <- fdata[, c(terms, rw$by), with = FALSE]

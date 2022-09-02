@@ -137,7 +137,7 @@ epinowcast <- function(data,
                        priors,
                        ...) {
   modules <- list(
-    expectation, reference, report, forecast, missing, obs, fit, ...
+    expectation, reference, report, missing, obs, fit,  forecast, ...
   )
   names(modules) <- as.character(seq_len(length(modules)))
   purrr::walk(modules, check_module)

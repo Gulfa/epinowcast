@@ -310,6 +310,7 @@ generated quantities {
   // Forecast
 
   array[g] vector[n_forecast + expr_gt_n]  forecast;
+  array[g] vector[n_forecast + expr_gt_n]  log_forecast;	
   vector[n_forecast] forecast_r;
   vector[forecast_fncol] forecast_beta;
   for(i in 1:(forecast_fncol)){
@@ -331,10 +332,10 @@ generated quantities {
       initial_values_forecast[i,j]= exp_lobs[j][t-expr_gt_n + i];
     }
   }	
-  forecast = log_expected_obs_from_r(
+  log_forecast = log_expected_obs_from_r(
     initial_values_forecast, forecast_r, forecast_g, n_forecast, expr_gt_n, expr_gt_n, expr_lrgt, n_forecast + expr_gt_n, g
   );
-
+  forecast = exp(log_forecast);
 
   profile("generated_total") {
   if (cast) {

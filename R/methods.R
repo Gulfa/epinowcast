@@ -22,7 +22,7 @@
 summary.epinowcast <- function(object, type = "nowcast", ...) {
   type <- match.arg(
     type,
-    choices = c("nowcast", "nowcast_samples", "fit", "posterior_prediction")
+    choices = c("nowcast", "nowcast_samples", "fit", "posterior_prediction", "forecast")
   )
 
   if (type %in% "nowcast") {
@@ -33,6 +33,8 @@ summary.epinowcast <- function(object, type = "nowcast", ...) {
     s <- enw_posterior(object$fit[[1]], ...)
   } else if (type %in% "posterior_prediction") {
     s <- enw_pp_summary(object$fit[[1]], object$new_confirm[[1]], ...)
+  }else if (type %in% "forecast") {
+    s <- enw_forecast_summary(object$fit[[1]], object$new_confirm[[1]], ...)
   }
   return(s)
 }

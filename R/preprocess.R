@@ -103,7 +103,7 @@ enw_add_metaobs_features <- function(metaobs,
   holidays <- coerce_date(holidays)
 
   # warn about columns that may be overwritten
-  tarcols <- c("day_of_week", "day", "week", "month")
+  tarcols <- c("day_of_week", "day", "week", "month", "second_week", "week_from_last", "two_weeks_from_last")
   if (any(tarcols %in% colnames(metaobs))) {
     warning(sprintf(
       "Pre-existing columns in `metaobs` will be overwritten: {%s}.",
@@ -121,6 +121,9 @@ enw_add_metaobs_features <- function(metaobs,
   to0week <- function(x) {
     return(x %/% 7L)
   }
+  to_second_week <- function(x) {
+    return(x %/% 14L)
+  }
   # function to count months from series start
   toevermonths <- function(d) {
     m <- data.table::month(d)
@@ -128,6 +131,12 @@ enw_add_metaobs_features <- function(metaobs,
     return(m + 12 * y)
   }
 
+  # Count n days from end of series
+  n_days_from_last <- function(x, n=7){
+    neg_intervals <- (x - max(x)-1) %/% n
+    return(neg_intervals + abs(min(neg_intervals)))
+  }
+  
   # functions to extract date indices; defined as
   # series of transformations applied (right to left)
   # then purrr::compose'd
@@ -143,7 +152,10 @@ enw_add_metaobs_features <- function(metaobs,
     ),
     day = list(zerobase, as.numeric),
     week = list(to0week, zerobase, as.numeric),
-    month = list(zerobase, toevermonths)
+    second_week = list(to_second_week, zerobase, as.numeric),
+    month = list(zerobase, toevermonths),
+    week_from_last = list(purrr::partial(n_days_from_last, n=7)),
+    two_weeks_from_last = list(purrr::partial(n_days_from_last, n=7))
   ), function(fns) {
     purrr::compose(!!!fns)
   })
@@ -771,7 +783,7 @@ enw_delay_metadata <- function(max_delay = 20, breaks = 4) {
 #' )
 enw_construct_data <- function(obs, new_confirm, latest, missing_reference,
                                reporting_triangle, metareport, metareference,
-                               metadelay, by, max_delay,holidays) {
+                               metadelay, by, max_delay) {
   out <- data.table::data.table(
     obs = list(obs),
     new_confirm = list(new_confirm),
@@ -786,8 +798,7 @@ enw_construct_data <- function(obs, new_confirm, latest, missing_reference,
     by = list(by),
     groups = length(unique(obs$.group)),
     max_delay = max_delay,
-    max_date = max(obs$report_date),
-    holidays = holidays
+    max_date = max(obs$report_date)
   )
   class(out) <- c("enw_preprocess_data", class(out))
   return(out[])
@@ -944,8 +955,7 @@ enw_preprocess_data <- function(obs, by = c(), max_delay = 20,
     metareport = metareport,
     metadelay = metadelay,
     by = by,
-    max_delay = max_delay,
-    holidays = holidays    
+    max_delay = max_delay
 
   )
   return(out[])

@@ -107,17 +107,17 @@ enw_forecast_plot <- function(nowcast){
 
   exp_obs <- enw_posterior(nowcast$fit[[1]], "exp_lobs")
   exp_obs$certainty <- "estim"
-  forecast <- enw_posterior(nowcast$fit[[1]], "forecast")
+  forecast <- enw_posterior(nowcast$fit[[1]], "log_forecast")
   forecast$certainty <- "forecast"
   dates <- nowcast$latest[[1]]$reference_date
-  forecast_dates <- seq(max(dates) + 1, max(dates) + nrow(forecast), by=1)
+  forecast_dates <- seq(max(dates)  - nrow(forecast) + nowcast$data[[1]]$n_forecast +1, max(dates) + nowcast$data[[1]]$n_forecast, by=1)
   expected <- rbind(exp_obs, forecast)
   expected$reference_date <- c(dates, forecast_dates)
 
   plot <- plot + geom_pointrange(aes(y=median, ymin=q20, ymax=q80)) +
-    geom_line(aes(y=exp(median)), data=expected) +
-    geom_ribbon(aes(ymin=exp(q20), ymax=exp(q80)), alpha=0.4, data=expected[certainty=="estim"]) + 
-    geom_ribbon(aes(ymin=exp(q20), ymax=exp(q80)), alpha=0.3, data=expected[certainty=="forecast"])
+    geom_line(aes(y=exp(median)), data=expected[reference_date > nowcast$max_date-nowcast$max_delay]) +
+    geom_ribbon(aes(ymin=exp(q20), ymax=exp(q80)), alpha=0.4, data=expected[certainty=="estim" & reference_date > nowcast$max_date-nowcast$max_delay]) + 
+    geom_ribbon(aes(ymin=exp(q20), ymax=exp(q80)), alpha=0.2, data=expected[certainty=="forecast"])
   return(plot)
 }
 

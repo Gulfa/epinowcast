@@ -171,7 +171,7 @@ enw_add_pooling_effect <- function(effects, string, var_name = "sd",
 #' @export
 enw_add_cumulative_membership <- function(metaobs, feature) {
   metaobs <- data.table::as.data.table(metaobs)
-  cfeature <- paste0("c", feature)
+  cfeature <- feature#paste0("c", feature)
   if (!any(grepl(cfeature, colnames(metaobs)))) {
     if (is.null(metaobs[[feature]])) {
       stop(

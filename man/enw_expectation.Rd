@@ -36,6 +36,7 @@ enw_expectation(data = enw_example("preprocessed"))
 \seealso{
 Model modules
 \code{\link{enw_fit_opts}()},
+\code{\link{enw_forecast}()},
 \code{\link{enw_missing}()},
 \code{\link{enw_obs}()},
 \code{\link{enw_reference}()},

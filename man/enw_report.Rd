@@ -44,6 +44,7 @@ enw_report(data = enw_example("preprocessed"))
 Model modules
 \code{\link{enw_expectation}()},
 \code{\link{enw_fit_opts}()},
+\code{\link{enw_forecast}()},
 \code{\link{enw_missing}()},
 \code{\link{enw_obs}()},
 \code{\link{enw_reference}()}
